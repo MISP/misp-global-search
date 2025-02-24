@@ -1,0 +1,90 @@
+body {
+    background-color: #f8f9fa;
+}
+
+.content-container {
+    margin-top: 120px;
+}
+
+/* Styling for individual search results */
+.result-card {
+    background: #ffffff;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.result-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.nested-table {
+    border-collapse: collapse;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    display: block;
+}
+
+.nested-table td {
+    border: 1px solid #dee2e6;
+    padding: 0.5rem;
+}
+
+/* Navbar customizations */
+.logo-container {
+    margin-right: 3rem;
+}
+
+.title-container {
+    margin-right: 3rem;
+}
+
+.navbar-custom {
+    background-color: #3F51B5;
+    min-height: 100px;
+    padding: 1rem 0;
+}
+
+.link-button {
+    color: white;
+    background-color: #3F51B5;
+}
+
+.navbar-title {
+    color: white;
+}
+
+#search-input:focus {
+    outline: none;
+    box-shadow: none;
+    border-color: grey;
+}
+
+/* Media Queries for Mobile Devices */
+@media (max-width: 576px) {
+
+    .logo-container,
+    .title-container {
+        margin-right: 1rem;
+    }
+
+    .navbar-custom {
+        /* Let the navbar adjust its height on small screens */
+        min-height: auto;
+        padding: 0.75rem 0;
+    }
+
+    .navbar-title {
+        font-size: 1rem;
+    }
+
+    .content-container {
+        margin-top: 140px;
+        /* Adjust if needed, to clear the navbar */
+    }
+}
