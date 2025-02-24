@@ -53,10 +53,16 @@ body {
 .link-button {
     color: white;
     background-color: #3F51B5;
+    border-color: #3F51B5;;
 }
 
 .navbar-title {
     color: white;
+}
+
+mark {
+  background-color: #9da9ef;
+  color: black;
 }
 
 #search-input:focus {

@@ -10,6 +10,22 @@ function debounce(func, delay) {
   };
 }
 
+// Helper: Escapes regex special characters in the query.
+function escapeRegex(string) {
+  return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+}
+
+// Helper: Wraps matching text in <mark> tags.
+function highlightText(text, query) {
+  if (!query) return text;
+  // Split the query by whitespace and filter out empty words.
+  const words = query.split(/\s+/).filter(w => w);
+  if (words.length === 0) return text;
+  // Build a regex that matches any of the words (case-insensitive)
+  const regex = new RegExp(`(${words.map(escapeRegex).join('|')})`, 'gi');
+  return text.replace(regex, '<mark>$1</mark>');
+}
+
 // Helper: Recursively creates a table for a JSON object.
 function createNestedTable(obj) {
   const table = document.createElement("table");
@@ -31,16 +47,23 @@ function createNestedTable(obj) {
   return table;
 }
 
-// Helper: Creates an element to display a given value.
+// Helper: Creates an element to display a given value with highlighting.
 function createValueElement(value) {
-  if (Array.isArray(value)) {
+  // If the value is a string, highlight matches.
+  if (typeof value === "string") {
+    const span = document.createElement("span");
+    const query = input.value.trim();
+    // Set innerHTML so that <mark> tags are rendered.
+    span.innerHTML = highlightText(value, query);
+    return span;
+  } else if (Array.isArray(value)) {
     const container = document.createElement("div");
     value.forEach(item => {
       if (typeof item === "object" && item !== null) {
         container.appendChild(createNestedTable(item));
       } else {
         const span = document.createElement("span");
-        span.textContent = item;
+        span.innerHTML = highlightText(String(item), input.value.trim());
         container.appendChild(span);
       }
       container.appendChild(document.createElement("br"));
@@ -49,7 +72,10 @@ function createValueElement(value) {
   } else if (typeof value === "object" && value !== null) {
     return createNestedTable(value);
   } else {
-    return document.createTextNode(value);
+    // For numbers or other primitives, convert to string.
+    const span = document.createElement("span");
+    span.innerHTML = highlightText(String(value), input.value.trim());
+    return span;
   }
 }
 
@@ -65,12 +91,11 @@ async function performSearch() {
         const hitDiv = document.createElement("div");
         hitDiv.className = "result-card";
 
-        // Title and Follow Link Button
         const titleDiv = document.createElement("div");
         titleDiv.className = "result-title";
 
         const titleText = document.createElement("h2");
-        titleText.textContent = hit.value || "No Title";
+        titleText.innerHTML = hit.value ? highlightText(hit.value, query) : "No Title";
         titleText.className = "h4";
         titleDiv.appendChild(titleText);
 
@@ -88,7 +113,7 @@ async function performSearch() {
 
         // Description
         const description = document.createElement("p");
-        description.textContent = hit.description || "No Description";
+        description.innerHTML = hit.description ? highlightText(hit.description, query) : "No Description";
         hitDiv.appendChild(description);
 
         // Table for additional key:value pairs.
@@ -125,3 +150,4 @@ const debouncedSearch = debounce(performSearch, 300);
 input.addEventListener("keyup", debouncedSearch);
 
 document.addEventListener("DOMContentLoaded", performSearch);
+
