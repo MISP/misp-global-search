@@ -13,13 +13,15 @@ with open("config.json", "r") as config_file:
 
 MEILI_URL = config.get("MEILI_URL", "http://localhost:7700")
 MEILI_ADMIN_API_KEY = config.get("MEILI_ADMIN_API_KEY")
+MEILI_API_KEY = config.get("MEILI_API_KEY")
 
-client = meilisearch.Client(MEILI_URL, MEILI_ADMIN_API_KEY)
+admin = meilisearch.Client(MEILI_URL, MEILI_ADMIN_API_KEY)
+client = meilisearch.Client(MEILI_URL, MEILI_API_KEY)
 
 templates = Jinja2Templates(directory="templates")
 
 async def homepage(request):
-    ms_indexes = client.get_indexes()
+    ms_indexes = admin.get_indexes()
     # Iterate over the "results" list from the returned dictionary.
     indexes = [index.uid for index in ms_indexes["results"]]
     return templates.TemplateResponse("index.html", {"request": request, "indexes": indexes})
@@ -32,7 +34,7 @@ async def search(request):
     except ValueError:
         slider_value = 0
 
-    ms_indexes = client.get_indexes()
+    ms_indexes = admin.get_indexes()
     index_list = [index.uid for index in ms_indexes["results"]]
 
     if not index_list:
