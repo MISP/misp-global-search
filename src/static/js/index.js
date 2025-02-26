@@ -133,7 +133,8 @@ async function performSearch() {
           tdKey.style.fontWeight = "bold";
 
           const tdValue = document.createElement("td");
-          tdValue.textContent = hit[key];
+          tdValue.appendChild(createValueElement(hit[key]));
+
 
           tr.appendChild(tdKey);
           tr.appendChild(tdValue);
