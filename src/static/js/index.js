@@ -1,5 +1,6 @@
 const input = document.getElementById("search-input");
 const resultsDiv = document.getElementById("results");
+const indexDropdown = document.getElementById("index-dropdown");
 
 // Debounce function to limit API calls.
 function debounce(func, delay) {
@@ -80,9 +81,11 @@ function createValueElement(value) {
 }
 
 async function performSearch() {
-  const query = input.value;
+  const query = input.value.trim();
+  const indexValue = indexDropdown.value;
   try {
-    const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
+    // Pass the index parameter (which is the dropdown value) to the search endpoint.
+    const response = await fetch(`/search?q=${encodeURIComponent(query)}&index=${encodeURIComponent(indexValue)}`);
     const data = await response.json();
     resultsDiv.innerHTML = "";
 
@@ -91,6 +94,7 @@ async function performSearch() {
         const hitDiv = document.createElement("div");
         hitDiv.className = "result-card";
 
+        // Title and Follow Link Button
         const titleDiv = document.createElement("div");
         titleDiv.className = "result-title";
 
@@ -99,7 +103,7 @@ async function performSearch() {
         titleText.className = "h4";
         titleDiv.appendChild(titleText);
 
-        if (hit.value) {
+        if (hit.value && availableIndexes[indexDropdown.value] === "misp-galaxy") {
           const button = document.createElement("button");
           button.textContent = "Go to MISP-Galaxy";
           button.className = "btn btn-primary link-button";
@@ -129,7 +133,7 @@ async function performSearch() {
           tdKey.style.fontWeight = "bold";
 
           const tdValue = document.createElement("td");
-          tdValue.appendChild(createValueElement(hit[key]));
+          tdValue.textContent = hit[key];
 
           tr.appendChild(tdKey);
           tr.appendChild(tdValue);
@@ -148,6 +152,8 @@ async function performSearch() {
 
 const debouncedSearch = debounce(performSearch, 300);
 input.addEventListener("keyup", debouncedSearch);
+
+indexDropdown.addEventListener("change", performSearch);
 
 document.addEventListener("DOMContentLoaded", performSearch);
 
