@@ -2,7 +2,6 @@ import meilisearch
 import json
 import requests
 
-HOST = "10.201.235.43:7700"
 INDEX = "misp-galaxy"
 
 GITHUB_OWNER = "MISP"
@@ -10,7 +9,12 @@ GITHUB_REPO = "misp-galaxy"
 BRANCH = "main"
 DATA_DIR = "clusters"
 
-client = meilisearch.Client(f"http://{HOST}")
+with open("./src/config.json", "r") as config_file:
+    config = json.load(config_file)
+API_KEY = config.get("MEILI_ADMIN_API_KEY")
+HOST = config.get("MEILI_URL")
+
+client = meilisearch.Client(HOST, API_KEY)
 
 
 def fetch_files_from_github(owner, repo, path, branch="main"):

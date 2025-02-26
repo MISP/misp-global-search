@@ -12,9 +12,9 @@ with open("config.json", "r") as config_file:
     config = json.load(config_file)
 
 MEILI_URL = config.get("MEILI_URL", "http://localhost:7700")
-MEILI_API_KEY = config.get("MEILI_API_KEY", "masterKey")
+MEILI_ADMIN_API_KEY = config.get("MEILI_ADMIN_API_KEY")
 
-client = meilisearch.Client(MEILI_URL, MEILI_API_KEY)
+client = meilisearch.Client(MEILI_URL, MEILI_ADMIN_API_KEY)
 
 templates = Jinja2Templates(directory="templates")
 
