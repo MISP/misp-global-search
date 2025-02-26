@@ -6,6 +6,8 @@ charset-normalizer==3.4.1
 click==8.1.8
 h11==0.14.0
 idna==3.10
+Jinja2==3.1.5
+MarkupSafe==3.0.2
 meilisearch==0.34.0
 pydantic==2.10.6
 pydantic_core==2.27.2
