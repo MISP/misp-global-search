@@ -49,7 +49,6 @@ def load_clusters_from_github():
                 doc = file_response.json()
                 for cluster in doc["values"]:
                     cluster["galaxy"] = galaxy
-                    cluster["repo"] = "galaxy"
                     docs.append(cluster)
             except Exception as e:
                 print(f"Error processing {file_info['name']}: {e}")
@@ -71,7 +70,6 @@ def load_objects_from_github():
             file_response.raise_for_status()
             try:
                 doc = file_response.json()
-                doc["repo"] = "objects"
                 docs.append(doc)
             except Exception as e:
                 print(f"Error processing {file_info['name']: {e}}")

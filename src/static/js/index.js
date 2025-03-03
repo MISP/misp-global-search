@@ -91,6 +91,11 @@ async function performSearch() {
 
     if (data.hits && data.hits.length > 0) {
       data.hits.forEach(hit => {
+        if (indexValue === "all") {
+            currentIndex = hit._federation.indexUid
+        } else {
+            currentIndex = availableIndexes[indexDropdown.value];
+        }
         const hitDiv = document.createElement("div");
         hitDiv.className = "result-card";
 
@@ -107,7 +112,7 @@ async function performSearch() {
         titleText.className = "h4";
         titleDiv.appendChild(titleText);
 
-        if (hit.repo === "galaxy") {
+        if (currentIndex === "misp-galaxy") {
           const button = document.createElement("button");
           button.textContent = "Visit MISP-Galaxy";
           button.className = "btn btn-primary link-button";
@@ -129,7 +134,7 @@ async function performSearch() {
         table.className = "nested-table";
 
         for (const key in hit) {
-          if (key === "value" || key === "description" || key === "repo") continue;
+          if (key === "value" || key === "description" || key === "_federation") continue;
           const tr = document.createElement("tr");
 
           const tdKey = document.createElement("td");
@@ -152,6 +157,7 @@ async function performSearch() {
     }
   } catch (error) {
     resultsDiv.innerHTML = "<p>Error retrieving search results</p>";
+    console.log(error)
   }
 }
 
