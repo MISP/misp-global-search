@@ -83,6 +83,7 @@ function createValueElement(value) {
 async function performSearch() {
   const query = input.value.trim();
   const indexValue = indexDropdown.value;
+  history.pushState(null, '', `/?q=${encodeURIComponent(query)}&index=${encodeURIComponent(indexValue)}`);
   try {
     // Pass the index parameter (which is the dropdown value) to the search endpoint.
     const response = await fetch(`/search?q=${encodeURIComponent(query)}&index=${encodeURIComponent(indexValue)}`);
@@ -166,5 +167,16 @@ input.addEventListener("keyup", debouncedSearch);
 
 indexDropdown.addEventListener("change", performSearch);
 
-document.addEventListener("DOMContentLoaded", performSearch);
+document.addEventListener("DOMContentLoaded", () => {
+  // Parse URL parameters
+  const params = new URLSearchParams(window.location.search);
+  const q = params.get("q") || "";
+  const index = params.get("index") || "all";
 
+  // Set the search input and dropdown to the URL values.
+  input.value = q;
+  indexDropdown.value = index;
+
+  // Then trigger the search.
+  performSearch();
+});
