@@ -20,19 +20,19 @@ client = meilisearch.Client(MEILI_URL, MEILI_API_KEY)
 
 templates = Jinja2Templates(directory="templates")
 
+
 async def homepage(request):
     ms_indexes = admin.get_indexes()
     # Iterate over the "results" list from the returned dictionary.
     indexes = [index.uid for index in ms_indexes["results"]]
-    return templates.TemplateResponse("index.html", {"request": request, "indexes": indexes})
+    return templates.TemplateResponse(
+        "index.html", {"request": request, "indexes": indexes}
+    )
+
 
 async def search(request):
-    query = request.query_params.get('q', '')
-    slider_value = request.query_params.get('index', '0')
-    try:
-        slider_value = int(slider_value)
-    except ValueError:
-        slider_value = 0
+    query = request.query_params.get("q", "")
+    index_param = request.query_params.get("index", "0")
 
     ms_indexes = admin.get_indexes()
     index_list = [index.uid for index in ms_indexes["results"]]
@@ -40,20 +40,30 @@ async def search(request):
     if not index_list:
         return JSONResponse({"hits": []})
 
-    slider_value = max(0, min(slider_value, len(index_list) - 1))
-    selected_index = index_list[slider_value]
-    index = client.index(selected_index)
-    results = index.search(query)
-    return JSONResponse(results)
+    if index_param == "all":
+        results = client.multi_search(
+            [
+                {"indexUid": "misp-galaxy", "q": query},
+                {"indexUid": "misp-objects", "q": query},
+            ],
+            {},
+        )
+        return JSONResponse(results)
+    else:
+        try:
+            index_position = int(index_param)
+        except ValueError:
+            index_position = 0
+        index_position = max(0, min(index_position, len(index_list) - 1))
+        selected_index = index_list[index_position]
+        results = client.index(selected_index).search(query)
+        return JSONResponse(results)
 
-routes = [
-    Route("/", homepage),
-    Route("/search", search)
-]
+
+routes = [Route("/", homepage), Route("/search", search)]
 
 app = Starlette(debug=True, routes=routes)
-app.mount('/static', StaticFiles(directory='static'), name='static')
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
-if __name__ == '__main__':
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8001)

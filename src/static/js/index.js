@@ -99,13 +99,17 @@ async function performSearch() {
         titleDiv.className = "result-title";
 
         const titleText = document.createElement("h2");
-        titleText.innerHTML = hit.value ? highlightText(hit.value, query) : "No Title";
+        if (hit.repo === "galaxy") {
+            titleText.innerHTML = hit.value ? highlightText(hit.value, query) : "No Title";
+        } else if (hit.repo === "objects") {
+            titleText.innerHTML = hit.name ? highlightText(hit.name, query) : "No Name";
+        }
         titleText.className = "h4";
         titleDiv.appendChild(titleText);
 
-        if (hit.value && availableIndexes[indexDropdown.value] === "misp-galaxy") {
+        if (hit.repo === "galaxy") {
           const button = document.createElement("button");
-          button.textContent = "Go to MISP-Galaxy";
+          button.textContent = "Visit MISP-Galaxy";
           button.className = "btn btn-primary link-button";
           button.onclick = function() {
             const formattedValue = hit.value.toLowerCase().replace(/\s+/g, '-');
@@ -125,7 +129,7 @@ async function performSearch() {
         table.className = "nested-table";
 
         for (const key in hit) {
-          if (key === "value" || key === "description") continue;
+          if (key === "value" || key === "description" || key === "repo") continue;
           const tr = document.createElement("tr");
 
           const tdKey = document.createElement("td");

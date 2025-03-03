@@ -37,6 +37,7 @@
                 </div>
                 <div class="col-auto mt-2 mt-md-0">
                     <select id="index-dropdown" class="form-select form-control">
+                        <option value="all">All</option>
                         {% for index in indexes %}
                         <option value="{{ loop.index0 }}">{{ index }}</option>
                         {% endfor %}
