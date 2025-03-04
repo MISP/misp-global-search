@@ -1,9 +1,6 @@
 body {
     background-color: #f8f9fa;
-}
-
-.content-container {
-    margin-top: 120px;
+    padding-top: 7rem;
 }
 
 /* Styling for individual search results */
@@ -19,7 +16,13 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
     margin-bottom: 1rem;
+}
+
+.galaxy-button {
+    margin-right: 1rem;
+    margin-left: auto;
 }
 
 .nested-table {
@@ -53,7 +56,8 @@ body {
 .link-button {
     color: white;
     background-color: #3F51B5;
-    border-color: #3F51B5;;
+    border-color: #3F51B5;
+    ;
 }
 
 .navbar-title {
@@ -61,8 +65,8 @@ body {
 }
 
 mark {
-  background-color: #9da9ef;
-  color: black;
+    background-color: #9da9ef;
+    color: black;
 }
 
 #search-input:focus {

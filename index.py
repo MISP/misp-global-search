@@ -76,8 +76,36 @@ def load_objects_from_github():
     print(f"Loaded {len(docs)} documents from GitHub.")
     return docs
 
+
 def load_taxonomies_from_github():
     print("Fetching data from MISP Taxonomies GitHub repository...")
+    docs = []
+    file_list = fetch_subdir_files_from_github("MISP", "misp-taxonomies", "", "main")
+    for file_info in file_list:
+        if file_info["name"] == "machinetag.json":
+            file_url = file_info["download_url"]
+            file_response = requests.get(file_url)
+            file_response.raise_for_status()
+            try:
+                doc = file_response.json()
+                ns = doc["namespace"]
+                for predicate in doc["predicates"]:
+                    predicate["namespace"] = ns
+                    docs.append(predicate)
+                try:
+                    for value in doc["values"]:
+                        pred = value["predicate"]
+                        for entry in value["entry"]:
+                            entry["namespace"] = ns
+                            entry["predicate"] = pred
+                            docs.append(entry)
+                except Exception:
+                    pass
+                docs.append(doc)
+            except Exception as e:
+                print(f"Error processing {file_info['name']: {e}}")
+    print(f"Loaded {len(docs)} documents from GitHub.")
+    return docs
 
 
 def cleanup(index):
@@ -98,10 +126,10 @@ def main():
     cleanup("misp-objects")
     objects = load_objects_from_github()
     index_documents(objects, "misp-objects")
-    
-    # cleanup("misp-taxonomies")
-    # taxonomies = load_taxonomies_from_github()
-    # index_documents(taxonomies, "misp-taxonomies")
+
+    cleanup("misp-taxonomies")
+    taxonomies = load_taxonomies_from_github()
+    index_documents(taxonomies, "misp-taxonomies")
 
 
 if __name__ == "__main__":

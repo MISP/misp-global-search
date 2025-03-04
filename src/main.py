@@ -41,13 +41,10 @@ async def search(request):
         return JSONResponse({"hits": []})
 
     if index_param == "all":
-        results = client.multi_search(
-            [
-                {"indexUid": "misp-galaxy", "q": query},
-                {"indexUid": "misp-objects", "q": query},
-            ],
-            {},
-        )
+        request = []
+        for index in index_list:
+            request.append({"indexUid": index, "q": query})
+        results = client.multi_search(request, {})
         return JSONResponse(results)
     else:
         try:
