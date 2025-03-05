@@ -177,7 +177,48 @@ async function performSearch() {
                     tr.appendChild(tdValue);
                     table.appendChild(tr);
                 }
-                hitDiv.appendChild(table);
+
+
+                // Create a unique ID for the accordion item.
+                const accordionId = "accordionCollapse" + Math.random().toString(36).substring(2, 8);
+
+                // Build the accordion structure.
+                const accordionDiv = document.createElement("div");
+                accordionDiv.className = "accordion";
+
+                const accordionItem = document.createElement("div");
+                accordionItem.className = "accordion-item";
+
+                const accordionHeader = document.createElement("h2");
+                accordionHeader.className = "accordion-header";
+                accordionHeader.id = "heading" + accordionId;
+
+                const accordionButton = document.createElement("button");
+                accordionButton.className = "accordion-button collapsed";
+                accordionButton.type = "button";
+                accordionButton.setAttribute("data-bs-toggle", "collapse");
+                accordionButton.setAttribute("data-bs-target", "#collapse" + accordionId);
+                accordionButton.setAttribute("aria-expanded", "false");
+                accordionButton.setAttribute("aria-controls", "collapse" + accordionId);
+                accordionButton.textContent = "Show Data";
+
+                accordionHeader.appendChild(accordionButton);
+                accordionItem.appendChild(accordionHeader);
+
+                const accordionCollapse = document.createElement("div");
+                accordionCollapse.id = "collapse" + accordionId;
+                accordionCollapse.className = "accordion-collapse collapse";
+                accordionCollapse.setAttribute("aria-labelledby", "heading" + accordionId);
+
+                const accordionBody = document.createElement("div");
+                accordionBody.className = "accordion-body";
+                accordionBody.appendChild(table);
+
+                accordionCollapse.appendChild(accordionBody);
+                accordionItem.appendChild(accordionCollapse);
+                accordionDiv.appendChild(accordionItem);
+
+                hitDiv.appendChild(accordionDiv);
                 resultsDiv.appendChild(hitDiv);
             });
         } else {
