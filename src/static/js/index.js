@@ -54,7 +54,7 @@ function createValueElement(value) {
                 container.appendChild(createNestedTable(item));
             } else {
                 const span = document.createElement("span");
-                span.textContent = String(item);
+                span.innerHTML = String(item);
                 container.appendChild(span);
             }
             container.appendChild(document.createElement("br"));
@@ -64,7 +64,7 @@ function createValueElement(value) {
         return createNestedTable(value);
     } else {
         const span = document.createElement("span");
-        span.textContent = String(value);
+        span.innerHTML = String(value);
         return span;
     }
 }
