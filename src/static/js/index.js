@@ -272,7 +272,11 @@ async function performSearch() {
     }
 }
 
-const debouncedSearch = debounce(performSearch, 300);
+// const debouncedSearch = debounce(performSearch, 300);
+const debouncedSearch = debounce(() => {
+    currentPage = 1; // Reset to page 1 when the search query changes.
+    performSearch();
+}, 300);
 input.addEventListener("keyup", debouncedSearch);
 
 indexDropdown.addEventListener("change", () => {

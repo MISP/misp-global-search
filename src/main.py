@@ -45,7 +45,7 @@ async def search(request):
         page_size = 10
     page_size = max(page_size, 1)
     offset = (page - 1) * page_size
-    
+
     ms_indexes = admin.get_indexes()
     index_list = [index.uid for index in ms_indexes["results"]]
 
