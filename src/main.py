@@ -43,7 +43,15 @@ async def search(request):
     if index_param == "all":
         request = []
         for index in index_list:
-            request.append({"indexUid": index, "q": query})
+            request.append(
+                {
+                    "indexUid": index,
+                    "q": query,
+                    "attributesToHighlight": ["*"],
+                    "highlightPreTag": "<mark>",
+                    "highlightPostTag": "</mark>",
+                }
+            )
         results = client.multi_search(request, {})
         return JSONResponse(results)
     else:
@@ -53,7 +61,14 @@ async def search(request):
             index_position = 0
         index_position = max(0, min(index_position, len(index_list) - 1))
         selected_index = index_list[index_position]
-        results = client.index(selected_index).search(query)
+        results = client.index(selected_index).search(
+            query,
+            {
+                "attributesToHighlight": ["*"],
+                "highlightPreTag": "<mark>",
+                "highlightPostTag": "</mark>",
+            },
+        )
         return JSONResponse(results)
 
 

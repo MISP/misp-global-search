@@ -16,17 +16,6 @@ function escapeRegex(string) {
     return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 
-// Helper: Wraps matching text in <mark> tags.
-function highlightText(text, query) {
-    if (!query) return text;
-    // Split the query by whitespace and filter out empty words.
-    const words = query.split(/\s+/).filter(w => w);
-    if (words.length === 0) return text;
-    // Build a regex that matches any of the words (case-insensitive)
-    const regex = new RegExp(`(${words.map(escapeRegex).join('|')})`, 'gi');
-    return text.replace(regex, '<mark>$1</mark>');
-}
-
 // Helper: Recursively creates a table for a JSON object.
 function createNestedTable(obj) {
     const table = document.createElement("table");
@@ -48,14 +37,12 @@ function createNestedTable(obj) {
     return table;
 }
 
-// Helper: Creates an element to display a given value with highlighting.
+// Helper: Creates an element to display a given value.
+// Instead of highlighting, we simply display the value as plain text.
 function createValueElement(value) {
-    // If the value is a string, highlight matches.
     if (typeof value === "string") {
         const span = document.createElement("span");
-        const query = input.value.trim();
-        // Set innerHTML so that <mark> tags are rendered.
-        span.innerHTML = highlightText(value, query);
+        span.innerHTML = value;
         return span;
     } else if (Array.isArray(value)) {
         const container = document.createElement("div");
@@ -64,7 +51,7 @@ function createValueElement(value) {
                 container.appendChild(createNestedTable(item));
             } else {
                 const span = document.createElement("span");
-                span.innerHTML = highlightText(String(item), input.value.trim());
+                span.textContent = String(item);
                 container.appendChild(span);
             }
             container.appendChild(document.createElement("br"));
@@ -73,9 +60,8 @@ function createValueElement(value) {
     } else if (typeof value === "object" && value !== null) {
         return createNestedTable(value);
     } else {
-        // For numbers or other primitives, convert to string.
         const span = document.createElement("span");
-        span.innerHTML = highlightText(String(value), input.value.trim());
+        span.textContent = String(value);
         return span;
     }
 }
@@ -85,15 +71,16 @@ async function performSearch() {
     const indexValue = indexDropdown.value;
     history.pushState(null, '', `/?q=${encodeURIComponent(query)}&index=${encodeURIComponent(indexValue)}`);
     try {
-        // Pass the index parameter (which is the dropdown value) to the search endpoint.
         const response = await fetch(`/search?q=${encodeURIComponent(query)}&index=${encodeURIComponent(indexValue)}`);
         const data = await response.json();
         resultsDiv.innerHTML = "";
 
         if (data.hits && data.hits.length > 0) {
-            data.hits.forEach(hit => {
+            data.hits.forEach(res => {
+                const { _formatted: hit } = res
+                let currentIndex;
                 if (indexValue === "all") {
-                    currentIndex = hit._federation.indexUid
+                    currentIndex = res._federation.indexUid;
                 } else {
                     currentIndex = availableIndexes[indexDropdown.value];
                 }
@@ -105,19 +92,20 @@ async function performSearch() {
                 titleDiv.className = "result-title";
 
                 const titleText = document.createElement("h2");
+                // Remove highlighting: simply use the raw value.
                 if (currentIndex === "misp-galaxy") {
-                    titleText.innerHTML = hit.value ? highlightText(hit.value, query) : "No Title";
+                    titleText.innerHTML = hit.value ? hit.value : "No Title";
                 } else if (currentIndex === "misp-objects") {
-                    titleText.innerHTML = hit.name ? highlightText(hit.name, query) : "No Name";
+                    titleText.innerHTML = hit.name ? hit.name : "No Name";
                 } else if (currentIndex === "misp-taxonomies") {
                     if (!hit.value) {
-                        titleText.innerHTML = highlightText(hit.namespace, query);
+                        titleText.innerHTML = hit.namespace;
                     } else if (hit.predicate) {
-                        title = hit.namespace + ":" + hit.predicate + "=\"" + hit.value + "\""
-                        titleText.innerHTML = highlightText(title, query);
+                        title = hit.namespace + ":" + hit.predicate + "=\"" + hit.value + "\"";
+                        titleText.innerHTML = title;
                     } else {
-                        title = hit.namespace + ":" + hit.value
-                        titleText.innerHTML = highlightText(title, query);
+                        title = hit.namespace + ":" + hit.value;
+                        titleText.innerHTML = title;
                     }
                 }
                 titleText.className = "h4";
@@ -152,9 +140,9 @@ async function performSearch() {
 
                 hitDiv.appendChild(titleDiv);
 
-                // Description
+                // Description: display raw description text.
                 const description = document.createElement("p");
-                description.innerHTML = hit.description ? highlightText(hit.description, query) : "No Description";
+                description.innerHTML = hit.description ? hit.description : "No Description";
                 hitDiv.appendChild(description);
 
                 // Table for additional key:value pairs.
@@ -172,12 +160,10 @@ async function performSearch() {
                     const tdValue = document.createElement("td");
                     tdValue.appendChild(createValueElement(hit[key]));
 
-
                     tr.appendChild(tdKey);
                     tr.appendChild(tdValue);
                     table.appendChild(tr);
                 }
-
 
                 // Create a unique ID for the accordion item.
                 const accordionId = "accordionCollapse" + Math.random().toString(36).substring(2, 8);
@@ -226,7 +212,7 @@ async function performSearch() {
         }
     } catch (error) {
         resultsDiv.innerHTML = "<p>Error retrieving search results</p>";
-        console.log(error)
+        console.log(error);
     }
 }
 
@@ -248,3 +234,4 @@ document.addEventListener("DOMContentLoaded", () => {
     // Then trigger the search.
     performSearch();
 });
+
