@@ -64,6 +64,12 @@ body {
     color: white;
 }
 
+.info-icon {
+    cursor: pointer;
+    margin-left: 0.5rem;
+    color: white;
+}
+
 #pagination {
     width: 100%;
     background: #f8f9fa; /* Light background, adjust as needed */

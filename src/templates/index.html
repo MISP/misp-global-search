@@ -31,7 +31,7 @@
                         <span class="input-group-text" id="search-icon">
                             <i class="bi bi-search"></i>
                         </span>
-                        <input id="search-input" type="text" class="form-control" placeholder="Type to search... (use '-term' to exclude terms)"
+                        <input id="search-input" type="text" class="form-control" placeholder="Type to search..."
                             aria-label="Search" aria-describedby="search-icon">
                     </div>
                 </div>
@@ -42,6 +42,17 @@
                         <option value="{{ loop.index0 }}">{{ index }}</option>
                         {% endfor %}
                     </select>
+                </div>
+                <div class="col-auto mt-2 mt-md-0">
+                    <span tabindex="0" class="info-icon" data-bs-toggle="popover" data-bs-placement="bottom"
+                            data-bs-trigger="hover focus" data-bs-html="true" data-bs-content="<b>Search Tips</b>:
+                        <ul>
+                          <li>Use quotes to search for exact phrases</li>
+                          <li>Use '-' to exclude terms</li>
+                          <li>Check spelling for better results</li>
+                        </ul>">
+                        <i class="bi bi-info-circle-fill" style="font-size: 1.5rem; color: white;"></i>
+                    </span>
                 </div>
             </div>
         </div>
