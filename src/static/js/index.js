@@ -1,6 +1,10 @@
 const input = document.getElementById("search-input");
 const resultsDiv = document.getElementById("results");
+const paginationDiv = document.getElementById("pagination");
 const indexDropdown = document.getElementById("index-dropdown");
+
+let currentPage = 1;
+const pageSize = 10;
 
 // Debounce function to limit API calls.
 function debounce(func, delay) {
@@ -38,7 +42,6 @@ function createNestedTable(obj) {
 }
 
 // Helper: Creates an element to display a given value.
-// Instead of highlighting, we simply display the value as plain text.
 function createValueElement(value) {
     if (typeof value === "string") {
         const span = document.createElement("span");
@@ -66,12 +69,61 @@ function createValueElement(value) {
     }
 }
 
+function updateURL() {
+    const query = input.value.trim();
+    const indexValue = indexDropdown.value;
+    history.pushState(null, '', `/?q=${encodeURIComponent(query)}&index=${encodeURIComponent(indexValue)}&page=${currentPage}`);
+}
+
+function renderPagination(totalHits) {
+    paginationDiv.innerHTML = "";
+    const totalPages = Math.ceil(totalHits / pageSize);
+    // Create Previous button if not on the first page.
+    if (currentPage > 1) {
+        const prevButton = document.createElement("button");
+        prevButton.textContent = "Previous";
+        prevButton.className = "btn btn-secondary";
+        prevButton.addEventListener("click", () => {
+            currentPage--;
+            updateURL();
+            performSearch();
+            window.scrollTo({
+                top: 0,
+                left: 0,
+                behavior: "instant",
+            });
+        });
+        paginationDiv.appendChild(prevButton);
+    }
+    // Display current page information.
+    const pageInfo = document.createElement("span");
+    pageInfo.textContent = ` Page ${currentPage} of ${totalPages} `;
+    paginationDiv.appendChild(pageInfo);
+    // Create Next button if there are more pages.
+    if (currentPage < totalPages) {
+        const nextButton = document.createElement("button");
+        nextButton.textContent = "Next";
+        nextButton.className = "btn btn-secondary";
+        nextButton.addEventListener("click", () => {
+            currentPage++;
+            updateURL();
+            performSearch();
+            window.scrollTo({
+                top: 0,
+                left: 0,
+                behavior: "instant",
+            });
+        });
+        paginationDiv.appendChild(nextButton);
+    }
+}
+
 async function performSearch() {
     const query = input.value.trim();
     const indexValue = indexDropdown.value;
-    history.pushState(null, '', `/?q=${encodeURIComponent(query)}&index=${encodeURIComponent(indexValue)}`);
+    history.pushState(null, '', `/?q=${encodeURIComponent(query)}&index=${encodeURIComponent(indexValue)}&page=${currentPage}`);
     try {
-        const response = await fetch(`/search?q=${encodeURIComponent(query)}&index=${encodeURIComponent(indexValue)}`);
+        const response = await fetch(`/search?q=${encodeURIComponent(query)}&index=${encodeURIComponent(indexValue)}&page=${currentPage}&pageSize=${pageSize}`);
         const data = await response.json();
         resultsDiv.innerHTML = "";
 
@@ -210,6 +262,10 @@ async function performSearch() {
         } else {
             resultsDiv.innerHTML = "<p>No results found</p>";
         }
+
+        let totalHits = data.estimatedTotalHits || data.nbHits || 0;
+        renderPagination(totalHits);
+
     } catch (error) {
         resultsDiv.innerHTML = "<p>Error retrieving search results</p>";
         console.log(error);
@@ -219,7 +275,11 @@ async function performSearch() {
 const debouncedSearch = debounce(performSearch, 300);
 input.addEventListener("keyup", debouncedSearch);
 
-indexDropdown.addEventListener("change", performSearch);
+indexDropdown.addEventListener("change", () => {
+    currentPage = 1;
+    performSearch();
+});
+
 
 document.addEventListener("DOMContentLoaded", () => {
     // Parse URL parameters
@@ -227,11 +287,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const q = params.get("q") || "";
     const index = params.get("index") || "all";
 
-    // Set the search input and dropdown to the URL values.
+    currentPage = parseInt(params.get("page")) || 1;
     input.value = q;
     indexDropdown.value = index;
 
-    // Then trigger the search.
     performSearch();
 });
 

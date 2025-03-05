@@ -64,6 +64,20 @@ body {
     color: white;
 }
 
+#pagination {
+    width: 100%;
+    background: #f8f9fa; /* Light background, adjust as needed */
+    padding: 10px;
+    text-align: center;
+}
+
+.btn.btn-secondary {
+    background-color: #3F51B5 !important; /* Blue background */
+    border-color: #3F51B5 !important;
+    color: white !important;
+}
+
+
 mark {
     background-color: #9da9ef;
     color: black;

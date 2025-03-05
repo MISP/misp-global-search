@@ -23,7 +23,6 @@ templates = Jinja2Templates(directory="templates")
 
 async def homepage(request):
     ms_indexes = admin.get_indexes()
-    # Iterate over the "results" list from the returned dictionary.
     indexes = [index.uid for index in ms_indexes["results"]]
     return templates.TemplateResponse(
         "index.html", {"request": request, "indexes": indexes}
@@ -34,6 +33,19 @@ async def search(request):
     query = request.query_params.get("q", "")
     index_param = request.query_params.get("index", "0")
 
+    try:
+        page = int(request.query_params.get("page", "1"))
+    except ValueError:
+        page = 1
+    page = max(page, 1)
+
+    try:
+        page_size = int(request.query_params.get("pageSize", "10"))
+    except ValueError:
+        page_size = 10
+    page_size = max(page_size, 1)
+    offset = (page - 1) * page_size
+    
     ms_indexes = admin.get_indexes()
     index_list = [index.uid for index in ms_indexes["results"]]
 
@@ -52,7 +64,13 @@ async def search(request):
                     "highlightPostTag": "</mark>",
                 }
             )
-        results = client.multi_search(request, {})
+        results = client.multi_search(
+            request,
+            {
+                "limit": page_size,
+                "offset": offset,
+            },
+        )
         return JSONResponse(results)
     else:
         try:
@@ -67,6 +85,8 @@ async def search(request):
                 "attributesToHighlight": ["*"],
                 "highlightPreTag": "<mark>",
                 "highlightPostTag": "</mark>",
+                "limit": page_size,
+                "offset": offset,
             },
         )
         return JSONResponse(results)
