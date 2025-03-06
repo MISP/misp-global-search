@@ -6,6 +6,8 @@ const indexDropdown = document.getElementById("index-dropdown");
 let currentPage = 1;
 const pageSize = 10;
 
+let selectedFilters = [];
+
 // Debounce function to limit API calls.
 function debounce(func, delay) {
     let timeoutId;
@@ -121,9 +123,14 @@ function renderPagination(totalHits) {
 async function performSearch() {
     const query = input.value.trim();
     const indexValue = indexDropdown.value;
-    history.pushState(null, '', `/?q=${encodeURIComponent(query)}&index=${encodeURIComponent(indexValue)}&page=${currentPage}`);
+    const filtersQuery = selectedFilters.length ? `&filters=${encodeURIComponent(selectedFilters.join(','))}` : '';
+    // history.pushState(null, '', `/?q=${encodeURIComponent(query)}&index=${encodeURIComponent(indexValue)}&page=${currentPage}`);
+    history.pushState(null, '', `/?q=${encodeURIComponent(query)}&index=${encodeURIComponent(indexValue)}&page=${currentPage}${filtersQuery}`);
     try {
-        const response = await fetch(`/search?q=${encodeURIComponent(query)}&index=${encodeURIComponent(indexValue)}&page=${currentPage}&pageSize=${pageSize}`);
+        // const response = await fetch(`/search?q=${encodeURIComponent(query)}&index=${encodeURIComponent(indexValue)}&page=${currentPage}&pageSize=${pageSize}`);
+        const response = await fetch(
+            `/search?q=${encodeURIComponent(query)}&index=${encodeURIComponent(indexValue)}&page=${currentPage}&pageSize=${pageSize}${filtersQuery}`
+        );
         const data = await response.json();
         resultsDiv.innerHTML = "";
 
@@ -298,9 +305,37 @@ document.addEventListener("DOMContentLoaded", () => {
     performSearch();
 });
 
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function() {
     var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
-    var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+    var popoverList = popoverTriggerList.map(function(popoverTriggerEl) {
         return new bootstrap.Popover(popoverTriggerEl);
     });
 });
+
+document.getElementById("applyFilterBtn").addEventListener("click", function() {
+    selectedFilters = [];
+
+    // Get all checked checkboxes in the filter form.
+    const checkboxes = document.querySelectorAll("#filterForm input[type=checkbox]:checked");
+    checkboxes.forEach(function(checkbox) {
+        selectedFilters.push(checkbox.value);
+    });
+
+    currentPage = 1;
+
+    // Close the modal.
+    var filterModalEl = document.getElementById('filterModal');
+    var modal = bootstrap.Modal.getInstance(filterModalEl);
+    modal.hide();
+
+    performSearch();
+});
+
+document.getElementById("filterModal").addEventListener("show.bs.modal", function () {
+  // Get all checkbox elements in the filter form.
+  const checkboxes = document.querySelectorAll("#filterForm input[type=checkbox]");
+  checkboxes.forEach(function (checkbox) {
+    checkbox.checked = selectedFilters.includes(checkbox.value);
+  });
+});
+
