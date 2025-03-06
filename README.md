@@ -1,6 +1,10 @@
 # MISP Global Search
 
-MISP Global Search is a tool to search MISP resources.
+MISP Global Search is a tool to quickly search MISP resources using full-text search. Currently the following resources are included: 
+
+- [MISP Galaxy](https://github.com/MISP/misp-galaxy)
+- [MISP Objects](https://github.com/MISP/misp-objects)
+- [MISP Taxonomies](https://github.com/MISP/misp-taxonomies)
 
 ## Deploy Locally
 
