@@ -40,7 +40,6 @@ def load_clusters_from_github():
     file_list = fetch_files_from_github("MISP", "misp-galaxy", "clusters", "main")
     for file_info in file_list:
         if file_info["name"].endswith(".json"):
-            print(f"Processing {file_info['name']}")
             file_url = file_info["download_url"]
             galaxy = file_info["name"].removesuffix(".json")
             file_response = requests.get(file_url)
@@ -64,7 +63,6 @@ def load_objects_from_github():
     )
     for file_info in file_list:
         if file_info["name"].endswith(".json"):
-            print(f"Processing {file_info['name']}")
             file_url = file_info["download_url"]
             file_response = requests.get(file_url)
             file_response.raise_for_status()
@@ -113,23 +111,22 @@ def cleanup(index):
 
 
 def index_documents(docs, index_name, primaryKey="uuid"):
-    client.create_index(index_name, {"primaryKey": primaryKey})
     for doc in docs:
         client.index(index_name).update_documents([doc])
 
 
 def main():
-    cleanup("misp-galaxy")
     clusters = load_clusters_from_github()
     index_documents(clusters, "misp-galaxy")
-    
-    cleanup("misp-objects")
+
     objects = load_objects_from_github()
     index_documents(objects, "misp-objects")
 
-    cleanup("misp-taxonomies")
     taxonomies = load_taxonomies_from_github()
     index_documents(taxonomies, "misp-taxonomies")
+    client.index("misp-taxonomies").update_filterable_attributes(
+        ["version", "namespace", "predicate"]
+    )
 
 
 if __name__ == "__main__":

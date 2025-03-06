@@ -35,6 +35,8 @@ This repo includes scripts to deploy MISP Global Search using LXD.
     ```
 
 2. Index MISP Galaxy data into Meilisearch:
+    > After running the `setup_meilisearch` script you have to add a GitHub personal access token to the `src/config.json` file as otherwise the index script cannot fetch all the files from GitHub due to their rate limiting. Just add `"GITHUB_PAT":"<token>"` to the file.
+
     ```bash
     pyhton3 index.py
     ```
@@ -43,5 +45,5 @@ This repo includes scripts to deploy MISP Global Search using LXD.
     ```bash
     bash setup_webapp.sh
     ```
-
+    > Note: Per default the webapp will bind to localhost:8000 on your host machine
 
