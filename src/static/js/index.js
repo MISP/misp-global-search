@@ -297,10 +297,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const params = new URLSearchParams(window.location.search);
     const q = params.get("q") || "";
     const index = params.get("index") || "all";
+    const filtersParam = params.get("filters") || "";
 
     currentPage = parseInt(params.get("page")) || 1;
+
     input.value = q;
     indexDropdown.value = index;
+
+    selectedFilters = filtersParam ? filtersParam.split(",") : [];
 
     performSearch();
 });
@@ -331,11 +335,11 @@ document.getElementById("applyFilterBtn").addEventListener("click", function() {
     performSearch();
 });
 
-document.getElementById("filterModal").addEventListener("show.bs.modal", function () {
-  // Get all checkbox elements in the filter form.
-  const checkboxes = document.querySelectorAll("#filterForm input[type=checkbox]");
-  checkboxes.forEach(function (checkbox) {
-    checkbox.checked = selectedFilters.includes(checkbox.value);
-  });
+document.getElementById("filterModal").addEventListener("show.bs.modal", function() {
+    // Get all checkbox elements in the filter form.
+    const checkboxes = document.querySelectorAll("#filterForm input[type=checkbox]");
+    checkboxes.forEach(function(checkbox) {
+        checkbox.checked = selectedFilters.includes(checkbox.value);
+    });
 });
 
