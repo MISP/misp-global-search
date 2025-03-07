@@ -57,3 +57,10 @@ This repo includes scripts to deploy MISP Global Search using LXD.
     ```
     > Note: Per default the webapp will bind to localhost:8000 on your host machine
 
+### Update
+
+To update the data in Meilisearch you can run the index script with the `--update` flag:
+
+```bash
+pyhton3 index.py --update
+```
