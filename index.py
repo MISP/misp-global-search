@@ -257,7 +257,7 @@ def main_local():
 
     clusters = load_clusters_from_local()
     index_documents(clusters, "misp-galaxy")
-    
+
     objects = load_objects_from_local()
     index_documents(objects, "misp-objects")
 
@@ -266,6 +266,36 @@ def main_local():
     client.index("misp-taxonomies").update_filterable_attributes(
         ["version", "namespace", "predicate"]
     )
+
+
+def main_update():
+    clone_repo("MISP", "misp-galaxy", "./data/misp-galaxy", "main")
+    clone_repo("MISP", "misp-objects", "./data/misp-objects", "main")
+    clone_repo("MISP", "misp-taxonomies", "./data/misp-taxonomies", "main")
+
+    clusters = load_clusters_from_local()
+    index_documents(clusters, "misp-galaxy_new")
+
+    objects = load_objects_from_local()
+    index_documents(objects, "misp-objects_new")
+
+    taxonomies = load_taxonomies_from_local()
+    index_documents(taxonomies, "misp-taxonomies_new")
+    client.index("misp-taxonomies_new").update_filterable_attributes(
+        ["version", "namespace", "predicate"]
+    )
+
+    client.swap_indexes(
+        [
+            {"indexes": ["misp-galaxy", "misp-galaxy_new"]},
+            {"indexes": ["misp-objects", "misp-objects_new"]},
+            {"indexes": ["misp-taxonomies", "misp-taxonomies_new"]},
+        ]
+    )
+
+    client.index("misp-galaxy_new").delete()
+    client.index("misp-objects_new").delete()
+    client.index("misp-taxonomies_new").delete()
 
 
 # ============================
@@ -285,9 +315,16 @@ if __name__ == "__main__":
         action="store_true",
         help="Clone repositories locally and load files from disk",
     )
+    group.add_argument(
+        "--update",
+        action="store_true",
+        help="Update indexes during production from local files cloning repositories",
+    )
     args = parser.parse_args()
 
     if args.api:
         main_api()
     elif args.local:
         main_local()
+    elif args.update:
+        main_update()

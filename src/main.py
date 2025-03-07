@@ -24,7 +24,7 @@ TAXONOMIES_INDEX = 'misp-taxonomies'
 
 async def homepage(request):
     ms_indexes = admin.get_indexes()
-    indexes = [index.uid for index in ms_indexes["results"]]
+    indexes = [index.uid for index in ms_indexes["results"] if not index.uid.endswith("_new")]
     return templates.TemplateResponse(
         "index.html", {"request": request, "indexes": indexes}
     )
@@ -134,7 +134,7 @@ async def search(request):
     page, page_size, offset = await get_paging_params(request)
 
     ms_indexes = admin.get_indexes()
-    index_list = [index.uid for index in ms_indexes["results"]]
+    index_list = [index.uid for index in ms_indexes["results"] if not index.uid.endswith("_new")]
 
     filter_string = build_filter_query(filters)
     search_options = build_search_options(page_size, offset, filter_string)
