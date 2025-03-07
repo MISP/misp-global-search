@@ -124,10 +124,8 @@ async function performSearch() {
     const query = input.value.trim();
     const indexValue = indexDropdown.value;
     const filtersQuery = selectedFilters.length ? `&filters=${encodeURIComponent(selectedFilters.join(','))}` : '';
-    // history.pushState(null, '', `/?q=${encodeURIComponent(query)}&index=${encodeURIComponent(indexValue)}&page=${currentPage}`);
     history.pushState(null, '', `/?q=${encodeURIComponent(query)}&index=${encodeURIComponent(indexValue)}&page=${currentPage}${filtersQuery}`);
     try {
-        // const response = await fetch(`/search?q=${encodeURIComponent(query)}&index=${encodeURIComponent(indexValue)}&page=${currentPage}&pageSize=${pageSize}`);
         const response = await fetch(
             `/search?q=${encodeURIComponent(query)}&index=${encodeURIComponent(indexValue)}&page=${currentPage}&pageSize=${pageSize}${filtersQuery}`
         );
@@ -177,7 +175,10 @@ async function performSearch() {
                     galaxyButton.className = "btn btn-primary link-button galaxy-button";
                     galaxyButton.onclick = function() {
                         const formattedValue = hit.value.toLowerCase().replace(/\s+/g, '-');
-                        window.location.href = `https://misp-galaxy.org/${encodeURIComponent(hit.galaxy || "")}/#${encodeURIComponent(formattedValue)}`;
+                        const cleanedGalaxy = (hit.galaxy || "").replace(/<\/?mark>/gi, '');
+                        const cleanedValue = (formattedValue || "").replace(/<\/?mark>/gi, '');
+                        window.location.href = `https://misp-galaxy.org/${encodeURIComponent(cleanedGalaxy)}/#${encodeURIComponent(cleanedValue)}`;
+
                     };
                     titleDiv.appendChild(galaxyButton);
                 }
@@ -188,11 +189,14 @@ async function performSearch() {
                 button.className = "btn btn-primary link-button contribute-button";
                 button.onclick = function() {
                     if (currentIndex === "misp-galaxy") {
-                        window.location.href = `https://github.com/MISP/misp-galaxy/edit/main/clusters/${encodeURIComponent(hit.galaxy || "")}.json`;
+                        const cleanedGalaxy = (hit.galaxy || "").replace(/<\/?mark>/gi, '');
+                        window.location.href = `https://github.com/MISP/misp-galaxy/edit/main/clusters/${encodeURIComponent(cleanedGalaxy)}.json`;
                     } else if (currentIndex === "misp-objects") {
-                        window.location.href = `https://github.com/MISP/misp-objects/edit/main/objects/${encodeURIComponent(hit.name || "")}/definition.json`;
+                        const cleanedName = (hit.name || "").replace(/<\/?mark>/gi, '');
+                        window.location.href = `https://github.com/MISP/misp-objects/edit/main/objects/${encodeURIComponent(cleanedName)}/definition.json`;
                     } else if (currentIndex === "misp-taxonomies") {
-                        window.location.href = `https://github.com/MISP/misp-taxonomies/edit/main/${encodeURIComponent(hit.namespace || "")}/machinetag.json`;
+                        const cleanedNS = (hit.namespace || "").replace(/<\/?mark>/gi, '');
+                        window.location.href = `https://github.com/MISP/misp-taxonomies/edit/main/${encodeURIComponent(cleanedNS)}/machinetag.json`;
                     }
                 };
                 titleDiv.appendChild(button);
