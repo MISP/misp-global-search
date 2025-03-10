@@ -248,6 +248,7 @@ def main_api():
     client.index("misp-taxonomies").update_filterable_attributes(
         ["version", "namespace", "predicate"]
     )
+    client.index("misp-galaxy").update_filterable_attributes(["galaxy"])
 
 
 def main_local():
@@ -266,6 +267,7 @@ def main_local():
     client.index("misp-taxonomies").update_filterable_attributes(
         ["version", "namespace", "predicate"]
     )
+    client.index("misp-galaxy").update_filterable_attributes(["galaxy"])
 
 
 def main_update():
