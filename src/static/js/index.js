@@ -358,23 +358,28 @@ indexDropdown.addEventListener("change", () => {
     performSearch();
 });
 
-
 document.addEventListener("DOMContentLoaded", () => {
-    // Parse URL parameters
+    // Parse URL parameters.
     const params = new URLSearchParams(window.location.search);
     const q = params.get("q") || "";
     const index = params.get("index") || "all";
-    const filtersParam = params.get("filters") || "";
+    const taxonomiesParam = params.get("taxonomies") || "";
+    const galaxyParam = params.get("galaxy") || "";
 
     currentPage = parseInt(params.get("page")) || 1;
 
     input.value = q;
     indexDropdown.value = index;
 
-    selectedFilters = filtersParam ? filtersParam.split(",") : [];
+    // Build the global filter object with separate arrays for each category.
+    selectedFilters = {
+        taxonomies: taxonomiesParam ? taxonomiesParam.split(",") : [],
+        galaxy: galaxyParam ? galaxyParam.split(",") : []
+    };
 
     performSearch();
 });
+
 
 document.addEventListener('DOMContentLoaded', function() {
     var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
