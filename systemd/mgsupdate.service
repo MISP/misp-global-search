@@ -1,0 +1,14 @@
+[Unit]
+Description=Service to automatically update MISP-gloabal-search based on new commits 
+After=network.target
+
+[Service]
+Type=simple
+User=mgsupdate
+WorkingDirectory=/opt/misp-global-search
+ExecStart=/opt/misp-global-search/env/bin/python3 /opt/misp-global-search/mgsupdate.py
+Restart=on-failure
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
