@@ -81,31 +81,40 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-
-                    <h5 class="modal-subtitle" id="filterModalLabel">Taxonomies</h5>
-                    <form id="filterForm">
+                    <!-- Taxonomies Group -->
+                    <h5 class="modal-subtitle">Taxonomies</h5>
+                    <form id="taxonomyFilterForm">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="namespaces" id="filterNamespaces">
+                            <input class="form-check-input" type="checkbox" value="namespaces" id="filterNamespaces"
+                                data-category="misp-taxonomies">
                             <label class="form-check-label" for="filterNamespaces">
                                 Namespaces
                             </label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="predicates" id="filterPredicates">
+                            <input class="form-check-input" type="checkbox" value="predicates" id="filterPredicates"
+                                data-category="misp-taxonomies">
                             <label class="form-check-label" for="filterPredicates">
                                 Predicates
                             </label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" value="values" id="filterValues">
+                            <input class="form-check-input" type="checkbox" value="values" id="filterValues"
+                                data-category="misp-taxonomies">
                             <label class="form-check-label" for="filterValues">
                                 Values
                             </label>
                         </div>
                     </form>
+                    <!-- Galaxy Group -->
+                    <h5 class="modal-subtitle mt-3">Galaxy</h5>
+                    <form id="galaxyFilterForm">
+                        <!-- Options from query -->
+                    </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" id="clearFilterBtn">Clear Filters</button>
                     <button type="button" class="btn btn-secondary" id="applyFilterBtn">Apply Filters</button>
                 </div>
             </div>

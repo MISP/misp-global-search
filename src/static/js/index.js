@@ -6,7 +6,10 @@ const indexDropdown = document.getElementById("index-dropdown");
 let currentPage = 1;
 const pageSize = 10;
 
-let selectedFilters = [];
+let selectedFilters = {
+    taxonomies: [],
+    galaxy: []
+};
 
 // Debounce function to limit API calls.
 function debounce(func, delay) {
@@ -123,11 +126,18 @@ function renderPagination(totalHits) {
 async function performSearch() {
     const query = input.value.trim();
     const indexValue = indexDropdown.value;
-    const filtersQuery = selectedFilters.length ? `&filters=${encodeURIComponent(selectedFilters.join(','))}` : '';
-    history.pushState(null, '', `/?q=${encodeURIComponent(query)}&index=${encodeURIComponent(indexValue)}&page=${currentPage}${filtersQuery}`);
+
+    // Build query strings for each filter category.
+    const taxonomyQuery = selectedFilters.taxonomies && selectedFilters.taxonomies.length
+        ? `&taxonomies=${encodeURIComponent(selectedFilters.taxonomies.join(','))}`
+        : "";
+    const galaxyQuery = selectedFilters.galaxy && selectedFilters.galaxy.length
+        ? `&galaxy=${encodeURIComponent(selectedFilters.galaxy.join(','))}`
+        : "";
+    history.pushState(null, '', `/?q=${encodeURIComponent(query)}&index=${encodeURIComponent(indexValue)}&page=${currentPage}${taxonomyQuery}${galaxyQuery}`);
     try {
         const response = await fetch(
-            `/search?q=${encodeURIComponent(query)}&index=${encodeURIComponent(indexValue)}&page=${currentPage}&pageSize=${pageSize}${filtersQuery}`
+            `/search?q=${encodeURIComponent(query)}&index=${encodeURIComponent(indexValue)}&page=${currentPage}&pageSize=${pageSize}${taxonomyQuery}${galaxyQuery}`
         );
         const data = await response.json();
         resultsDiv.innerHTML = "";
@@ -173,7 +183,7 @@ async function performSearch() {
                     const cleanedGalaxy = (hit.galaxy || "").replace(/<\/?mark>/gi, '');
 
                     const galaxyTag = document.createElement("a");
-                    galaxyTag.className = "badge bg-warning text-dark me-2 galaxy-tag"; 
+                    galaxyTag.className = "badge bg-warning text-dark me-2 galaxy-tag";
                     galaxyTag.textContent = cleanedGalaxy || "Unknown Galaxy";
                     galaxyTag.href = `https://misp-galaxy.org/${encodeURIComponent(cleanedGalaxy)}/`;
                     galaxyTag.target = "_blank";
@@ -296,6 +306,46 @@ async function performSearch() {
     }
 }
 
+async function loadGalaxyFilters() {
+    try {
+        // Construct a URL for a search that returns only facets.
+        // For example, here we search with an empty query.
+        const response = await fetch(`/search?q=&index=0&page=1&pageSize=0&facetsDistribution=["galaxy"]`);
+        const data = await response.json();
+
+        if (data.facetDistribution && data.facetDistribution.galaxy) {
+            const galaxyFacets = data.facetDistribution.galaxy;
+            const galaxyForm = document.getElementById("galaxyFilterForm");
+            galaxyForm.innerHTML = ""; // Clear previous content
+
+            // For each facet, create a checkbox with the galaxy name and count.
+            for (const [galaxy, count] of Object.entries(galaxyFacets)) {
+                const div = document.createElement("div");
+                div.className = "form-check";
+
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.className = "form-check-input";
+                checkbox.value = galaxy;
+                checkbox.id = "filterGalaxy_" + galaxy;
+                checkbox.dataset.category = "misp-galaxy";
+
+                const label = document.createElement("label");
+                label.className = "form-check-label";
+                label.setAttribute("for", checkbox.id);
+                label.textContent = `${galaxy} (${count})`;
+
+                div.appendChild(checkbox);
+                div.appendChild(label);
+                galaxyForm.appendChild(div);
+            }
+        }
+    } catch (error) {
+        console.error("Error loading galaxy facets:", error);
+    }
+}
+
+
 // const debouncedSearch = debounce(performSearch, 300);
 const debouncedSearch = debounce(() => {
     currentPage = 1; // Reset to page 1 when the search query changes.
@@ -334,13 +384,28 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 document.getElementById("applyFilterBtn").addEventListener("click", function() {
-    selectedFilters = [];
+    // Create objects to store selected filters by category.
+    let taxonomyFilters = [];
+    let galaxyFilters = [];
 
-    // Get all checked checkboxes in the filter form.
-    const checkboxes = document.querySelectorAll("#filterForm input[type=checkbox]:checked");
-    checkboxes.forEach(function(checkbox) {
-        selectedFilters.push(checkbox.value);
+    // Get checked checkboxes from the taxonomy form.
+    const taxonomyCheckboxes = document.querySelectorAll("#taxonomyFilterForm input[type=checkbox]:checked");
+    taxonomyCheckboxes.forEach(function(checkbox) {
+        taxonomyFilters.push(checkbox.value);
     });
+
+    // Get checked checkboxes from the galaxy form.
+    const galaxyCheckboxes = document.querySelectorAll("#galaxyFilterForm input[type=checkbox]:checked");
+    galaxyCheckboxes.forEach(function(checkbox) {
+        galaxyFilters.push(checkbox.value);
+    });
+
+    // Store the selected filters in a global variable.
+    // You might choose to store them as an object for clarity.
+    selectedFilters = {
+        taxonomies: taxonomyFilters,
+        galaxy: galaxyFilters
+    };
 
     currentPage = 1;
 
@@ -352,11 +417,43 @@ document.getElementById("applyFilterBtn").addEventListener("click", function() {
     performSearch();
 });
 
-document.getElementById("filterModal").addEventListener("show.bs.modal", function() {
-    // Get all checkbox elements in the filter form.
-    const checkboxes = document.querySelectorAll("#filterForm input[type=checkbox]");
-    checkboxes.forEach(function(checkbox) {
-        checkbox.checked = selectedFilters.includes(checkbox.value);
+document.getElementById("filterModal").addEventListener("show.bs.modal", async function() {
+    await loadGalaxyFilters();
+    // For taxonomy filters:
+    const taxonomyCheckboxes = document.querySelectorAll("#taxonomyFilterForm input[type=checkbox]");
+    taxonomyCheckboxes.forEach(function(checkbox) {
+        checkbox.checked = selectedFilters.taxonomies && selectedFilters.taxonomies.includes(checkbox.value);
+    });
+
+    // For galaxy filters:
+    const galaxyCheckboxes = document.querySelectorAll("#galaxyFilterForm input[type=checkbox]");
+    galaxyCheckboxes.forEach(function(checkbox) {
+        checkbox.checked = selectedFilters.galaxy && selectedFilters.galaxy.includes(checkbox.value);
     });
 });
 
+document.getElementById("clearFilterBtn").addEventListener("click", function() {
+    selectedFilters = {
+        taxonomies: [],
+        galaxy: []
+    };
+
+    // Uncheck all checkboxes in the taxonomy filter form.
+    const taxonomyCheckboxes = document.querySelectorAll("#taxonomyFilterForm input[type=checkbox]");
+    taxonomyCheckboxes.forEach(function(checkbox) {
+        checkbox.checked = false;
+    });
+
+    // Uncheck all checkboxes in the galaxy filter form.
+    const galaxyCheckboxes = document.querySelectorAll("#galaxyFilterForm input[type=checkbox]");
+    galaxyCheckboxes.forEach(function(checkbox) {
+        checkbox.checked = false;
+    });
+
+    const filterModalEl = document.getElementById('filterModal');
+    const modalInstance = bootstrap.Modal.getInstance(filterModalEl);
+    if (modalInstance) {
+        modalInstance.hide();
+    }
+    performSearch();
+});
