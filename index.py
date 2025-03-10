@@ -1,6 +1,5 @@
 import meilisearch
 import json
-import requests
 import os
 import subprocess
 import argparse
@@ -13,109 +12,7 @@ HOST = config.get("MEILI_URL")
 client = meilisearch.Client(HOST, API_KEY)
 
 # ============================
-# GitHub API functions
-# ============================
-
-
-def fetch_files_from_github(owner, repo, path, token, branch="main"):
-    url = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}?ref={branch}"
-    headers = {"Authorization": f"token {token}"}
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    return response.json()
-
-
-def fetch_subdir_files_from_github(owner, repo, path, token, branch="main"):
-    all_files = []
-    items = fetch_files_from_github(owner, repo, path, token, branch)
-    for item in items:
-        if item["type"] == "file":
-            all_files.append(item)
-        elif item["type"] == "dir":
-            all_files.extend(
-                fetch_subdir_files_from_github(owner, repo, item["path"], branch)
-            )
-    return all_files
-
-
-def load_clusters_from_github(token):
-    print("Fetching data from MISP Galaxy GitHub repository (API mode)...")
-    docs = []
-    file_list = fetch_files_from_github(
-        "MISP", "misp-galaxy", "clusters", token, "main"
-    )
-    for file_info in file_list:
-        if file_info["name"].endswith(".json"):
-            file_url = file_info["download_url"]
-            galaxy = file_info["name"].removesuffix(".json")
-            file_response = requests.get(file_url)
-            file_response.raise_for_status()
-            try:
-                doc = file_response.json()
-                for cluster in doc["values"]:
-                    cluster["galaxy"] = galaxy
-                    docs.append(cluster)
-            except Exception as e:
-                print(f"Error processing {file_info['name']}: {e}")
-    print(f"Loaded {len(docs)} documents from GitHub.")
-    return docs
-
-
-def load_objects_from_github(token):
-    print("Fetching data from MISP Objects GitHub repository (API mode)...")
-    docs = []
-    file_list = fetch_subdir_files_from_github(
-        "MISP", "misp-objects", "objects", token, "main"
-    )
-    for file_info in file_list:
-        if file_info["name"].endswith(".json"):
-            file_url = file_info["download_url"]
-            file_response = requests.get(file_url)
-            file_response.raise_for_status()
-            try:
-                doc = file_response.json()
-                docs.append(doc)
-            except Exception as e:
-                print(f"Error processing {file_info['name']}: {e}")
-    print(f"Loaded {len(docs)} documents from GitHub.")
-    return docs
-
-
-def load_taxonomies_from_github(token):
-    print("Fetching data from MISP Taxonomies GitHub repository (API mode)...")
-    docs = []
-    file_list = fetch_subdir_files_from_github(
-        "MISP", "misp-taxonomies", "", token, "main"
-    )
-    for file_info in file_list:
-        if file_info["name"] == "machinetag.json":
-            file_url = file_info["download_url"]
-            file_response = requests.get(file_url)
-            file_response.raise_for_status()
-            try:
-                doc = file_response.json()
-                ns = doc["namespace"]
-                for predicate in doc["predicates"]:
-                    predicate["namespace"] = ns
-                    docs.append(predicate)
-                try:
-                    for value in doc["values"]:
-                        pred = value["predicate"]
-                        for entry in value["entry"]:
-                            entry["namespace"] = ns
-                            entry["predicate"] = pred
-                            docs.append(entry)
-                except Exception:
-                    pass
-                docs.append(doc)
-            except Exception as e:
-                print(f"Error processing {file_info['name']}: {e}")
-    print(f"Loaded {len(docs)} documents from GitHub.")
-    return docs
-
-
-# ============================
-# Local mode functions
+# Cloning functions
 # ============================
 
 
@@ -140,6 +37,22 @@ def clone_repo(owner, repo, local_path, branch="main"):
         subprocess.run(["git", "-C", local_path, "pull"], check=True)
 
 
+def test_galaxy_deprecated(file):
+    galaxy_dir = "./data/misp-galaxy/galaxies"
+    file_path = os.path.join(galaxy_dir, file)
+    if not os.path.exists(file_path):
+        return True
+    try:
+        with open(file_path, "r") as f:
+            galaxy = json.load(f)
+            if galaxy["namespace"] == "deprecated":
+                return True
+            return False
+    except Exception as e:
+        print(f"Could not read file {file_path}: {e}")
+        return True
+
+
 def load_clusters_from_local():
     print("Fetching data from local MISP Galaxy repository...")
     docs = []
@@ -150,6 +63,8 @@ def load_clusters_from_local():
         return docs
     for filename in os.listdir(clusters_dir):
         if filename.endswith(".json"):
+            if test_galaxy_deprecated(filename):
+                continue
             galaxy = filename.removesuffix(".json")
             file_path = os.path.join(clusters_dir, filename)
             try:
@@ -235,22 +150,6 @@ def index_documents(docs, index_name, primaryKey="uuid"):
 # ============================
 
 
-def main_api():
-    token = config.get("GITHUB_PAT")
-    clusters = load_clusters_from_github(token)
-    index_documents(clusters, "misp-galaxy")
-
-    objects = load_objects_from_github(token)
-    index_documents(objects, "misp-objects")
-
-    taxonomies = load_taxonomies_from_github(token)
-    index_documents(taxonomies, "misp-taxonomies")
-    client.index("misp-taxonomies").update_filterable_attributes(
-        ["version", "namespace", "predicate"]
-    )
-    client.index("misp-galaxy").update_filterable_attributes(["galaxy"])
-
-
 def main_local():
     clone_repo("MISP", "misp-galaxy", "./data/misp-galaxy", "main")
     clone_repo("MISP", "misp-objects", "./data/misp-objects", "main")
@@ -300,33 +199,38 @@ def main_update():
     client.index("misp-taxonomies_new").delete()
 
 
+def main_clean():
+    indexes = client.get_indexes()
+    for index in indexes["results"]:
+        index.delete()
+
+
 # ============================
 # Argument parsing and entry point
 # ============================
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Index MISP data from GitHub (API mode) or local repositories (local mode)."
-    )
+    parser = argparse.ArgumentParser(description="Index MISP data from GitHub")
     group = parser.add_mutually_exclusive_group(required=True)
+
     group.add_argument(
-        "--api", action="store_true", help="Fetch files using the GitHub API"
-    )
-    group.add_argument(
-        "--local",
+        "--index",
         action="store_true",
-        help="Clone repositories locally and load files from disk",
+        help="Clone repositories locally and index Meilisearch",
     )
     group.add_argument(
         "--update",
         action="store_true",
         help="Update indexes during production from local files cloning repositories",
     )
+    group.add_argument(
+        "--clean", action="store_true", help="Clean all indexes on Meilisearch"
+    )
     args = parser.parse_args()
 
-    if args.api:
-        main_api()
-    elif args.local:
+    if args.index:
         main_local()
     elif args.update:
         main_update()
+    elif args.clean:
+        main_clean()

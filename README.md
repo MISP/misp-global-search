@@ -36,20 +36,11 @@ This repo includes scripts to deploy MISP Global Search using LXD.
 
 2. Index MISP Galaxy data into Meilisearch:
 
-    You can use the `index.py` file to automatically index Meilisearch with the data from the sources above. You can choose if you want to fetch the data from the GitHub API or clone the corresponding repos locally:
+    You can use the `index.py` file to automatically index Meilisearch with the data from the sources above. 
 
-    **Locally**:
     ```bash
-    python3 index.py --local
+    python3 index.py --index
     ```
-
-    **GitHub API**:
-    ```bash
-    pyhton3 index.py --api
-    ```
-
-    > Note: You need to add a GitHub personal access token to the `src/config.json` file in order to fetch all the files from GitHub due to their rate limiting. Just add `"GITHUB_PAT":"<token>"` to the file.
-
 
 3. Start webapp:
     ```bash
