@@ -168,6 +168,20 @@ async function performSearch() {
                 titleText.className = "h4";
                 titleDiv.appendChild(titleText);
 
+                // Tag with the galaxy for MISP-Galaxy
+                if (currentIndex === "misp-galaxy") {
+                    const cleanedGalaxy = (hit.galaxy || "").replace(/<\/?mark>/gi, '');
+
+                    const galaxyTag = document.createElement("a");
+                    galaxyTag.className = "badge bg-warning text-dark me-2"; // Bootstrap
+                    galaxyTag.textContent = cleanedGalaxy || "Unknown Galaxy";
+                    galaxyTag.href = `https://misp-galaxy.org/${encodeURIComponent(cleanedGalaxy)}/`;
+                    galaxyTag.target = "_blank";
+                    galaxyTag.style.cursor = "pointer";
+
+                    titleDiv.appendChild(galaxyTag);
+                }
+
                 // Button with link to MISP-Galaxy
                 if (currentIndex === "misp-galaxy") {
                     const galaxyButton = document.createElement("button");
