@@ -185,7 +185,7 @@ def main_update():
     client.index("misp-taxonomies_new").update_filterable_attributes(
         ["version", "namespace", "predicate"]
     )
-    client.index("misp-galaxy").update_filterable_attributes(["galaxy"])
+    client.index("misp-galaxy_new").update_filterable_attributes(["galaxy"])
 
     client.swap_indexes(
         [
